@@ -1,0 +1,86 @@
+# This policy uses the Sentinel tfrun import to restrict the
+# proposed monthly cost that would be incurred if the current
+# plan were applied, using different limits for different
+# workspaces based on their names.
+
+# Import common-functions/tfrun-functions/tfrun-functions.sentinel
+# with alias "run"
+# import "tfrun-functions" as run
+# The standard decimal import
+import "decimal"
+import "tfrun"
+
+### limit_cost_by_workspace_name ###
+# Validate that the proposed monthly cost is less than the limit
+# This accepts a map, limits, whose keys should be strings like
+# "dev", "qa", or "prod" and whose values should be expressions like
+# decimal.new(200) (which indicates a monthly limit of $200).
+# The keys are treated as allowed workspace name prefixes and suffixes.
+# If a workspace does not have one of the keys as a prefix or suffix, it will
+# fail the policy.
+limit_cost_by_workspace_name = func(limits) {
+
+  # Check whether cost estimate is available
+  # It should be for Terraform 0.12.x
+  # It should not be for Terraform 0.11.x
+  if tfrun.cost_estimate else null is null {
+    print("No cost estimates available")
+    # Allow the policy to pass
+    return true
+  }
+
+  # Get workspace name
+  workspace_name = tfrun.workspace.name
+
+  # Iterate over the limits map to determine limit
+  the_limit = decimal.new(0)
+  matching_name_found = false
+  for limits as name, limit {
+    if workspace_name matches "(.+)-" + name + "$" or
+       workspace_name matches "^" + name + "-(.+)$" {
+      the_limit = limits[name]
+      matching_name_found = true
+      break
+    }
+  }
+
+  # Print message if workspace name did not match any keys
+  if matching_name_found is false {
+    print("The current workspace", workspace_name,
+          "is not allowed because no cost limits are associated with a",
+          "regular expression matching its name.")
+    return false
+  }
+
+  # Determine proposed monthly cost
+  proposed_cost = decimal.new(tfrun.cost_estimate.proposed_monthly_cost)
+
+  # Compare proposed monthly cost to the limit
+  if proposed_cost.lte(the_limit) {
+    print("Proposed monthly cost", proposed_cost.string,
+          "of workspace", workspace_name,
+          "is under the limit:", the_limit.string)
+    return true
+  } else {
+    print("Proposed monthly cost", proposed_cost.string,
+          "of workspace", workspace_name,
+          "is over the limit:", the_limit.string)
+    return false
+  }
+}
+
+# Monthly Limits
+limits = {
+  "dev": decimal.new(100),
+  "qa": decimal.new(500),
+  "prod": decimal.new(1000),
+}
+
+# Call the validation function
+# Warnings will be printed for violations
+cost_validated = limit_cost_by_workspace_name(limits)
+
+# Main rule
+main = rule {
+  cost_validated
+}
