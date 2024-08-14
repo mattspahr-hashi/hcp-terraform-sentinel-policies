@@ -71,7 +71,7 @@ limit_cost_by_workspace_name = func(limits) {
 
 # Monthly Limits
 limits = {
-  "dev": decimal.new(100),
+  "dev": decimal.new(20),
   "qa": decimal.new(500),
   "prod": decimal.new(1000),
 }
