@@ -24,11 +24,6 @@ policy "limit-cost-by-workspace-name"{
   enforcement_level = "soft-mandatory"
 }
 
-policy "require-all-resources-from-pmr"{
-  source = "./require-all-resources-from-pmr.sentinel"
-  enforcement_level = "soft-mandatory"
-}
-
 policy "validate-providers-from-desired-regions"{
   source = "./validate-providers-from-desired-regions.sentinel"
   enforcement_level = "soft-mandatory"
