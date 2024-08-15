@@ -21,7 +21,7 @@ policy "enforce-mandatory-tags"{
 
 policy "limit-cost-by-workspace-name"{
   source = "./limit-cost-by-workspace-name.sentinel"
-  enforcement_level = "hard-mandatory"
+  enforcement_level = "soft-mandatory"
 }
 
 policy "validate-providers-from-desired-regions"{
