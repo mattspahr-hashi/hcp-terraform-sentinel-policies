@@ -14,11 +14,6 @@ module "aws-functions" {
   source = "./aws-functions/aws-functions.sentinel"
 }
 
-policy "enforce-mandatory-tags"{
-  source = "./enforce-mandatory-tags.sentinel"
-  enforcement_level = "soft-mandatory"
-}
-
 policy "limit-cost-by-workspace-name"{
   source = "./limit-cost-by-workspace-name.sentinel"
   enforcement_level = "soft-mandatory"
